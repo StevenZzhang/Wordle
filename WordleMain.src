@@ -1,0 +1,140 @@
+import java.io.File;  // Import the File class
+import java.io.FileNotFoundException;  // Import this class to handle errors
+import java.util.*;
+
+public class WordleMain {
+    public static void main(String[] args)
+    {
+        //this part of code will take all the words from the list and store it all in allWords
+        ArrayList<String> allWords = new ArrayList<String>();
+        try {
+            File myObj = new File("C:\\Users\\meixi\\IdeaProjects\\Project 1\\src\\Wordle.txt");
+            Scanner myReader = new Scanner(myObj);
+            while (myReader.hasNextLine())
+            {
+                String data = myReader.nextLine();
+                allWords.add(data);
+            }
+            myReader.close();
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        Scanner pencil = new Scanner(System.in);
+        boolean playagain = true;
+        boolean win = false;
+        while (playagain) {
+            win = false;
+            System.out.println("Welcome to Wordle!");
+            String gameword = wordRandom(allWords);
+            WordleObject gamewordobject = wordtoobject(gameword);
+            System.out.println("You get a total of 6 guesses");
+            String guessword;
+            WordleObject guesswordobject;
+            for (int index = 0; index < 6; index++) {
+                System.out.println("Please input guess " + (index + 1));
+                guessword = pencil.nextLine();
+                guesswordobject = wordtoobject(guessword);
+                ArrayList<Integer> numofcorrect = correctplace(gamewordobject, guesswordobject);
+                if (numofcorrect.size() > 0) {
+                    for (int i = 0; i < numofcorrect.size(); i++) {
+                        numofcorrect.set(i, numofcorrect.get(i) + 1);
+                    }
+                    System.out.println("You guessed letter(s) " + numofcorrect + " correctly.");
+                    for (int i = 0; i < numofcorrect.size(); i++) {
+                        numofcorrect.set(i, numofcorrect.get(i) - 1);
+                    }
+                }
+                if (numofcorrect.size() == 5) {
+                    win = true;
+                    break;
+                }
+                ArrayList<Integer> indexofwrongplace = wrongplace(gamewordobject, guesswordobject, numofcorrect);
+                if (indexofwrongplace.size() > 0) {
+                    for (int i = 0; i < indexofwrongplace.size(); i++) {
+                        indexofwrongplace.set(i, indexofwrongplace.get(i) + 1);
+                    }
+                    System.out.println("Letter(s) " + indexofwrongplace + " are correct but in the wrong spot.");
+                    for (int i = 0; i < indexofwrongplace.size(); i++) {
+                        indexofwrongplace.set(i, indexofwrongplace.get(i) - 1);
+                    }
+                }
+                if (indexofwrongplace.size() == 0 && numofcorrect.size() == 0) {
+                    System.out.println("No letters in your word are correct.");
+                }
+            }
+            if (win) {
+                System.out.println("Congratulations! \nYou have guessed the word!");
+            }
+            if (!win) {
+                System.out.println("The word was " + gameword + ".\nBetter luck next time!");
+            }
+            System.out.println("Would you like to play again? (y/n)");
+            String yesorno = pencil.nextLine();
+            if (yesorno.equals("y")) {
+                playagain = true;
+            }
+            else
+                playagain = false;
+        }
+    }
+    public static String wordRandom(ArrayList<String> allWords) {
+        int amount = allWords.size();
+        int random = (int) (Math.random() * amount);
+        return allWords.get(random);
+    }
+    public static ArrayList<Integer> correctplace(WordleObject gameword, WordleObject guess) {
+        ArrayList<Integer> numofcorrect = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            if (gameword.getLetters()[i].equals(guess.getLetters()[i])) {
+                numofcorrect.add(i);
+            }
+        }
+        return numofcorrect;
+    }
+    public static WordleObject wordtoobject(String word) {
+        String[] letters = new String[5];
+        for (int i = 0; i < word.length(); i++) {
+            letters[i] = word.substring(i, i + 1);
+        }
+        WordleObject object = new WordleObject(letters);
+        return object;
+    }
+    public static ArrayList<Integer> wrongplace(WordleObject gameword, WordleObject guess, ArrayList<Integer> correctplace) {
+        boolean notcorrect = true;
+        ArrayList<Integer> wrongplaceindex = new ArrayList<>();
+        ArrayList<String> gamewordwrongword = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            notcorrect = true;
+            for (int j = 0; j < correctplace.size(); j++) {
+                if (correctplace.get(j) == i) {
+                    notcorrect = false;
+                }
+            }
+            if (notcorrect) {
+                gamewordwrongword.add(gameword.getLetters()[i]);
+            }
+        }
+        for (int i = 0; i < 5; i++) {
+            boolean addornot = false;
+            for (int j = 0; j < gamewordwrongword.size(); j++) {
+                if (guess.getLetters()[i].equals(gamewordwrongword.get(j))) {
+                    addornot = true;
+                }
+            }
+            if (addornot) {
+                for (int k = 0; k < correctplace.size(); k++) {
+                    if (correctplace.get(k) == i) {
+                        addornot = false;
+                    }
+                }
+            }
+            if (addornot) {
+                wrongplaceindex.add(i);
+            }
+        }
+        return wrongplaceindex;
+    }
+}
